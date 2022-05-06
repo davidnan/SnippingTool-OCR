@@ -1,5 +1,6 @@
 import os
 import time
+import cv2
 from PIL import Image
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel
@@ -130,14 +131,24 @@ class CutPS(QMainWindow):
         return x_first, y_first, x_second, y_second, revert
 
     def crop_image(self, x_first, y_first, x_second, y_second):
+        initial = time.perf_counter()
         x_first, y_first, x_second, y_second, revert = self.clean_coords(x_first, y_first, x_second, y_second)
-        img = Image.open(self.image_path)
-        img = img.crop((x_first, y_first, x_second + 1, y_second + 1))
-        img.save("im.png")
-        return revert
+        img = cv2.imread(self.image_path)
+        img = img[y_first:y_second+1, x_first:x_second+1]
+        final = time.perf_counter()
+        print(f"time: {final - initial}")
+        return revert, img
 
-    def highlight_image(self):
-        image_pixmap = QPixmap(self.local_path + "\im.png")
+    def convert_cv_qt(self, cv_img):
+        rgb_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
+        h, w, ch = rgb_image.shape
+        bytes_per_line = ch * w
+        img = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        return img
+
+    def highlight_image(self, cv_img):
+        image = self.convert_cv_qt(cv_img)
+        image_pixmap = QPixmap.fromImage(image)
         self.image_label.setPixmap(image_pixmap)
         self.image_label.resize(image_pixmap.width(), image_pixmap.height())
 
@@ -150,8 +161,8 @@ class CutPS(QMainWindow):
     def mouseMoveEvent(self, event):
         self.image_label.setStyleSheet("border: 2px solid white")
         if not self.coords.is_empty():
-            revert = self.crop_image(self.coords.first.x, self.coords.first.y, event.x(), event.y())
-            self.highlight_image()
+            revert, img = self.crop_image(self.coords.first.x, self.coords.first.y, event.x(), event.y())
+            self.highlight_image(img)
             if revert == 0:
                 self.image_label.move(self.coords.first.x, self.coords.first.y)
             elif revert == 1:
@@ -163,8 +174,8 @@ class CutPS(QMainWindow):
 
 
     def mouseReleaseEvent(self, event):
-        revert = self.crop_image(self.coords.first.x, self.coords.first.y, event.x(), event.y())
-        self.highlight_image()
+        revert, img = self.crop_image(self.coords.first.x, self.coords.first.y, event.x(), event.y())
+        self.highlight_image(img)
         if revert == 0:
             self.image_label.move(self.coords.first.x, self.coords.first.y)
         elif revert == 1:
@@ -174,11 +185,12 @@ class CutPS(QMainWindow):
         elif revert == 3:
             self.image_label.move(event.x(), event.y())
 
+        # cv2.imwrite("im.png", img)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(img)
+        img_pil.save("im.png")
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Return:
-            self.highlight_image()
-
         if event.key() == Qt.Key_Escape:
             self.close()
             self.SIGNALS.CLOSE.emit()
