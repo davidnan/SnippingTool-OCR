@@ -6,6 +6,7 @@ import tkinter as tk
 from snippingtool.cutPrintScreen import CutPS
 from snippingtool.printScreen import PrintScreen
 from snippingtool.monitors import Monitors
+from textget.gettext import GetTxt
 from PyQt5.Qt import QApplication
 
 class SnippingTool():
@@ -14,7 +15,8 @@ class SnippingTool():
 
     def __init__(self) -> None:
         self.local_path = os.path.abspath(os.getcwd())
-        self.image_path = self.local_path + "\img.png"
+        self.image_path = self.local_path + "/resources/img.png"
+        self.cropped_image_path = self.local_path + "/resources/im.png"
         self.monitors = Monitors()
         self.ss = PrintScreen(self.image_path, self.monitors.focused_monitor)
 
@@ -26,15 +28,14 @@ class SnippingTool():
 
     def __del__(self):
         if os.path.exists(self.image_path):
-            # os.remove(self.image_path)
-            pass
-
+            os.remove(self.image_path)
+        if os.path.exists(self.cropped_image_path):
+            os.remove(self.cropped_image_path)
 
 
 if __name__ == "__main__":
     ps = SnippingTool()
     ps.ss.take_screenshot()
     ps.initCutPS()
+
     sys.exit(ps.app.exec_())
-
-
