@@ -1,5 +1,5 @@
 # SnippingTool-OCR
-## This project has 2 main functionalities:
+## Features :electric_plug:
 - It can be used as a snipping tool
 - It can copy the text from a selected portion of your screen
 ### To run this project you need to have tesseract installed. Tesseract can be installed from [here](https://tesseract-ocr.github.io/tessdoc/Downloads.html).
