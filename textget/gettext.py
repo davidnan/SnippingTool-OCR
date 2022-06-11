@@ -13,10 +13,10 @@ class GetTxt():
         self.read_langs()
 
     def read_langs(self):
-        with open("langs.json", 'r') as f:
-            langs = json.load(f)
-            self.languages = json.loads(json.dumps(langs))
-            self.languages = self.languages["langs"]
+        
+        langs = json.load(f)
+        self.languages = json.loads(json.dumps(langs))
+        self.languages = self.languages["langs"]
 
         for s in self.languages:
             self.languages_str += s + "+"
